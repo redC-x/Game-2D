@@ -1,0 +1,2544 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0">
+
+<title>Batalla 2D</title>
+
+<style>
+
+/* =========================
+   PANTALLA
+========================= */
+
+html,
+body {
+
+    margin: 0;
+    padding: 0;
+
+    width: 100%;
+    height: 100%;
+
+    overflow: hidden;
+
+    font-family: Arial;
+    width: 100vw;
+    height: 100vh;
+    background: #69a94f;
+
+}
+
+
+/* =========================
+   VENTANA DEL JUEGO
+========================= */
+
+#screen {
+
+    position: fixed;
+
+    left: 0;
+    top: 0;
+
+    width: 100vw;
+    height: 100vh;
+
+    overflow: hidden;
+
+    touch-action: none;
+
+}
+
+
+/* =========================
+   MAPA
+========================= */
+
+#world {
+
+    position: absolute;
+
+    left: 0;
+    top: 0;
+
+    width: 3000px;
+    height: 100vh;
+
+    background: #69a94f;
+
+}
+
+/* =========================
+   HUD
+========================= */
+
+#top {
+
+    position: fixed;
+
+    top: 10px;
+    left: 10px;
+    right: 10px;
+
+    padding: 15px;
+
+    background: rgba(0,0,0,.7);
+
+    color: white;
+
+    display: flex;
+
+    justify-content:
+        space-between;
+
+    border-radius: 10px;
+
+    z-index: 1000;
+
+}
+
+
+/* =========================
+   BOTONES
+========================= */
+
+#panel {
+
+    position: fixed;
+
+    bottom: 10px;
+    left: 50%;
+
+    transform:
+        translateX(-50%);
+
+    z-index: 1000;
+
+    white-space: nowrap;
+
+}
+
+
+button {
+
+    padding: 12px;
+
+    font-size: 16px;
+
+    margin: 3px;
+
+    border-radius: 8px;
+
+    border:
+        2px solid #222;
+
+}
+
+
+/* =========================
+   UNIDADES
+========================= */
+
+.unit {
+
+    position: absolute;
+
+    width: 55px;
+    height: 65px;
+
+    bottom: auto;
+
+    display: flex;
+
+    justify-content:
+        center;
+
+    align-items:
+        center;
+
+    font-size: 35px;
+
+    z-index: 20;
+
+    top: auto;
+
+}
+
+
+.sprite {
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: contain;
+
+    image-rendering:
+        pixelated;
+
+}
+
+
+/* =========================
+   VIDA
+========================= */
+
+.health {
+
+    position: absolute;
+
+    top: -10px;
+    left: 0;
+
+    width: 100%;
+    height: 7px;
+
+    background: red;
+
+}
+
+
+.healthBar {
+
+    width: 100%;
+    height: 100%;
+
+    background: lime;
+
+}
+
+
+/* =========================
+   BASES
+========================= */
+
+.base {
+
+    position: absolute;
+
+    bottom: 30%;
+
+    width: 80px;
+    height: 110px;
+
+    display: flex;
+
+    justify-content:
+        center;
+
+    align-items:
+        center;
+
+    font-size: 45px;
+
+    border:
+        4px solid #222;
+
+    border-radius: 10px;
+
+    z-index: 10;
+
+}
+
+
+#playerBase {
+
+    left: 80px;
+
+    background:
+        #3980dd;
+
+}
+
+
+#enemyBase {
+
+    left: 2800px;
+
+    background:
+        #dd3939;
+
+}
+
+
+/* =========================
+   VIDA DE BASE
+========================= */
+
+.baseHealth {
+
+    position: absolute;
+
+    top: -18px;
+    left: 0;
+
+    width: 100%;
+    height: 10px;
+
+    background: #600;
+
+}
+
+
+#playerHealthBar,
+#enemyHealthBar {
+
+    width: 100%;
+    height: 100%;
+
+    background: limegreen;
+
+}
+
+
+/* =========================
+   MAGIA
+========================= */
+
+.magic {
+
+    position: absolute;
+
+    font-size: 25px;
+
+    z-index: 50;
+
+}
+
+
+/* =========================
+   INDICADOR
+========================= */
+
+#cameraInfo {
+
+    position: fixed;
+
+    bottom: 80px;
+    left: 50%;
+
+    transform:
+        translateX(-50%);
+
+    color: white;
+
+    background:
+        rgba(0,0,0,.35);
+
+    padding: 5px 10px;
+
+    border-radius: 10px;
+
+    z-index: 999;
+
+    font-size: 12px;
+
+    opacity: .7;
+
+}
+
+/* =========================
+   ADAPTACIÓN PARA PC
+========================= */
+
+@media (min-width: 900px) {
+
+    #top {
+
+        top: 15px;
+        left: 20px;
+        right: 20px;
+
+        height: 55px;
+
+        padding: 0 25px;
+
+        font-size: 20px;
+
+    }
+
+
+    #panel {
+
+        bottom: 20px;
+
+    }
+
+
+    #panel button {
+
+        padding: 14px 20px;
+
+        font-size: 18px;
+
+        margin: 5px;
+
+    }
+
+
+    .unit {
+
+        width: 65px;
+        height: 75px;
+
+        font-size: 40px;
+
+    }
+
+
+    .base {
+
+        width: 100px;
+        height: 130px;
+
+        font-size: 55px;
+
+    }
+
+}
+</style>
+
+</head>
+
+
+<body>
+
+
+<div id="screen">
+
+
+    <!-- =====================
+         MAPA
+    ====================== -->
+
+    <div id="world">
+
+
+        <!-- BASE JUGADOR -->
+
+        <div
+            id="playerBase"
+            class="base"
+        >
+
+            🏰
+
+            <div class="baseHealth">
+
+                <div
+                    id="playerHealthBar"
+                ></div>
+
+            </div>
+
+        </div>
+
+
+        <!-- BASE ENEMIGA -->
+
+        <div
+            id="enemyBase"
+            class="base"
+        >
+
+            🏰
+
+            <div class="baseHealth">
+
+                <div
+                    id="enemyHealthBar"
+                ></div>
+
+            </div>
+
+        </div>
+
+
+    </div>
+
+
+    <!-- =====================
+         HUD
+    ====================== -->
+
+    <div id="top">
+
+        <span id="money">
+
+            💰 100
+
+        </span>
+
+
+        <span id="timer">
+
+            ⏱️ 120
+
+        </span>
+
+    </div>
+
+
+    <!-- =====================
+         BOTONES
+    ====================== -->
+
+    <div id="panel">
+
+        <button id="mageButton" onclick="createMage()">
+    🧙 Invocar Mago $20
+</button>
+
+<button id="warriorButton" onclick="createWarrior()">
+    ⚔️ Invocar Guerrero $30
+</button>
+
+    </div>
+
+
+    <div id="cameraInfo">
+
+        Arrastra el campo para moverte
+
+    </div>
+
+
+</div>
+
+
+<script>
+
+
+/* ==================================================
+   VARIABLES
+================================================== */
+
+const WORLD_WIDTH =
+    3000;
+
+
+let cameraX = 0;
+
+
+let playerBaseHealth = 8000;
+
+let enemyBaseHealth = 8000;
+
+const MAX_BASE_HEALTH = 8000;
+
+
+let money =
+    100;
+
+
+let time =
+    120;
+
+
+let playerMages =
+    [];
+
+
+let playerWarriors =
+    [];
+
+
+let enemies =
+    [];
+
+
+let magic =
+    [];
+
+
+let gameOver =
+    false;
+
+let mageCooldown = false;
+let warriorCooldown = false;
+
+const MAGE_COOLDOWN = 4000;
+const WARRIOR_COOLDOWN = 6000;
+
+let MAX_TROOPS = 100;
+
+/* ==================================================
+   ELEMENTOS
+================================================== */
+
+const world =
+    document.getElementById(
+        "world"
+    );
+
+
+/* ==================================================
+   DINERO
+================================================== */
+
+function updateMoney() {
+
+    document
+        .getElementById("money")
+        .textContent =
+        "💰 " + money;
+
+}
+
+function updateMageButton(text) {
+
+    document.getElementById("mageButton")
+        .textContent = text;
+
+}
+
+
+function updateWarriorButton(text) {
+
+    document.getElementById("warriorButton")
+        .textContent = text;
+
+}
+/* ==================================================
+   ACTUALIZAR CÁMARA
+================================================== */
+
+function updateCamera() {
+
+    world.style.transform =
+        "translateX(" +
+        (-cameraX) +
+        "px)";
+
+}
+
+
+/* ==================================================
+   CONTROL TÁCTIL
+================================================== */
+
+let dragging =
+    false;
+
+
+let lastTouchX =
+    0;
+
+
+document
+    .getElementById("screen")
+    .addEventListener(
+        "pointerdown",
+        function(e) {
+
+            /*
+             * Si tocamos un botón,
+             * no mover la cámara.
+             */
+
+            if (
+                e.target.tagName ===
+                "BUTTON"
+            ) {
+
+                return;
+
+            }
+
+
+            dragging =
+                true;
+
+
+            lastTouchX =
+                e.clientX;
+
+        }
+    );
+
+
+document
+    .getElementById("screen")
+    .addEventListener(
+        "pointermove",
+        function(e) {
+
+            if (!dragging) {
+
+                return;
+
+            }
+
+
+            const movement =
+                e.clientX -
+                lastTouchX;
+
+
+            cameraX -=
+                movement;
+
+
+            const maxCamera =
+                Math.max(
+                    0,
+                    WORLD_WIDTH -
+                    window.innerWidth
+                );
+
+
+            cameraX =
+                Math.max(
+                    0,
+                    Math.min(
+                        cameraX,
+                        maxCamera
+                    )
+                );
+
+
+            updateCamera();
+
+
+            lastTouchX =
+                e.clientX;
+
+        }
+    );
+
+
+document
+    .getElementById("screen")
+    .addEventListener(
+        "pointerup",
+        function() {
+
+            dragging =
+                false;
+
+        }
+    );
+
+
+document
+    .getElementById("screen")
+    .addEventListener(
+        "pointercancel",
+        function() {
+
+            dragging =
+                false;
+
+        }
+    );
+
+
+/* ==================================================
+   POSICIÓN BASE
+================================================== */
+
+function getBasePosition(
+    side
+) {
+
+    const base =
+        document.getElementById(
+            side === "player"
+                ? "playerBase"
+                : "enemyBase"
+        );
+
+
+    return {
+
+        left:
+            base.offsetLeft,
+
+        right:
+            base.offsetLeft +
+            base.offsetWidth
+
+    };
+
+}
+
+
+/* ==================================================
+   CREAR MAGO
+================================================== */
+
+function createMage() {
+
+    const amount = 5;
+
+    if (
+        money < 20 ||
+        gameOver ||
+        !canSpawn(amount) ||
+        mageCooldown
+    ) {
+        return;
+    }
+
+    money -= 20;
+
+    updateMoney();
+
+    mageCooldown = true;
+
+
+    for (let i = 0; i < amount; i++) {
+
+        const element =
+            document.createElement("div");
+
+        element.className =
+            "unit";
+
+
+        const image =
+            document.createElement("img");
+
+        image.src =
+            "sprites/mago.png";
+
+        image.className =
+            "sprite";
+
+        element.appendChild(image);
+
+
+        addHealthBar(element);
+
+        world.appendChild(element);
+
+
+        const mage = {
+
+            element: element,
+
+            type: "mage",
+
+            x:
+                150 +
+                Math.random() * 80,
+
+            y:
+                40 +
+                Math.random() * 35,
+
+            health: 100,
+
+            maxHealth: 100,
+
+            lastAttack: 0
+
+        };
+
+
+        element.style.left =
+            mage.x + "px";
+
+        element.style.bottom =
+            mage.y + "%";
+
+
+        playerMages.push(
+            mage
+        );
+
+    }
+
+
+    /* =========================
+       COOLDOWN
+    ========================= */
+
+    let seconds =
+        MAGE_COOLDOWN / 1000;
+
+
+    const mageButton =
+        document.getElementById(
+            "mageButton"
+        );
+
+
+    mageButton.disabled =
+        true;
+
+
+    mageButton.textContent =
+        "🧙 Mago ⏳ " +
+        seconds +
+        "s";
+
+
+    const mageTimer =
+        setInterval(function() {
+
+            seconds--;
+
+
+            if (seconds <= 0) {
+
+                clearInterval(
+                    mageTimer
+                );
+
+
+                mageCooldown =
+                    false;
+
+
+                mageButton.disabled =
+                    false;
+
+
+                mageButton.textContent =
+                    "🧙 Invocar Mago $20";
+
+
+            } else {
+
+                mageButton.textContent =
+                    "🧙 Mago ⏳ " +
+                    seconds +
+                    "s";
+
+            }
+
+        }, 1000);
+
+      }
+
+/* ==================================================
+   CREAR GUERRERO
+================================================== */
+
+function createWarrior() {
+
+    const amount = 10;
+
+    if (
+        money < 30 ||
+        gameOver ||
+        !canSpawn(amount) ||
+        warriorCooldown
+    ) {
+        return;
+    }
+
+    money -= 30;
+
+    updateMoney();
+
+    warriorCooldown = true;
+
+
+    for (let i = 0; i < amount; i++) {
+
+        const element =
+            document.createElement("div");
+
+        element.className =
+            "unit";
+
+
+        element.textContent =
+            "⚔️";
+
+
+        addHealthBar(element);
+
+        world.appendChild(element);
+
+
+        const warrior = {
+
+            element: element,
+
+            type: "warrior",
+
+            x:
+                150 +
+                Math.random() * 100,
+
+            y:
+                35 +
+                Math.random() * 45,
+
+            health: 160,
+
+            maxHealth: 160,
+
+            lastAttack: 0
+
+        };
+
+
+        element.style.left =
+            warrior.x + "px";
+
+        element.style.bottom =
+            warrior.y + "%";
+
+
+        playerWarriors.push(
+            warrior
+        );
+
+    }
+
+
+    /* =========================
+       COOLDOWN
+    ========================= */
+
+    let seconds =
+        WARRIOR_COOLDOWN / 1000;
+
+
+    const warriorButton =
+        document.getElementById(
+            "warriorButton"
+        );
+
+
+    warriorButton.disabled =
+        true;
+
+
+    warriorButton.textContent =
+        "⚔️ Guerrero ⏳ " +
+        seconds +
+        "s";
+
+
+    const warriorTimer =
+        setInterval(function() {
+
+            seconds--;
+
+
+            if (seconds <= 0) {
+
+                clearInterval(
+                    warriorTimer
+                );
+
+
+                warriorCooldown =
+                    false;
+
+
+                warriorButton.disabled =
+                    false;
+
+
+                warriorButton.textContent =
+                    "⚔️ Invocar Guerrero $30";
+
+
+            } else {
+
+                warriorButton.textContent =
+                    "⚔️ Guerrero ⏳ " +
+                    seconds +
+                    "s";
+
+            }
+
+        }, 1000);
+
+}
+
+/* ==================================================
+   BARRA DE VIDA
+================================================== */
+
+function addHealthBar(
+    element
+) {
+
+    const health =
+        document.createElement(
+            "div"
+        );
+
+
+    health.className =
+        "health";
+
+
+    const bar =
+        document.createElement(
+            "div"
+        );
+
+
+    bar.className =
+        "healthBar";
+
+
+    health.appendChild(
+        bar
+    );
+
+
+    element.appendChild(
+        health
+    );
+
+}
+
+function canSpawn(amount) {
+
+    const total =
+        playerMages.length +
+        playerWarriors.length;
+
+    return total + amount <= MAX_TROOPS;
+
+}
+
+/* ==================================================
+   CREAR ENEMIGO
+================================================== */
+
+function createEnemy() {
+
+    if (gameOver) {
+        return;
+    }
+
+    const amount = 8;
+
+    for (
+        let i = 0;
+        i < amount;
+        i++
+    ) {
+
+        const element =
+            document.createElement(
+                "div"
+            );
+
+        element.className =
+            "unit";
+
+        element.textContent =
+            "👹";
+
+        addHealthBar(
+            element
+        );
+
+        world.appendChild(
+            element
+        );
+
+        const enemy = {
+
+    element:
+        element,
+
+    x:
+        2720 + Math.random() * 80,
+
+    y:
+        40 + Math.random() * 45,
+
+    health:
+        100,
+
+    maxHealth:
+        100,
+
+    lastAttack:
+        0
+
+};
+
+
+element.style.left =
+    enemy.x + "px";
+
+element.style.bottom =
+    enemy.y + "%";
+
+        enemies.push(
+            enemy
+        );
+
+    }
+
+}
+
+/* ==================================================
+   DAÑO A BASE
+================================================== */
+
+function damageBase(
+    side,
+    amount
+) {
+
+    if (gameOver) {
+
+        return;
+
+    }
+
+
+    if (
+        side === "enemy"
+    ) {
+
+        enemyBaseHealth -=
+            amount;
+
+
+        document
+            .getElementById(
+                "enemyHealthBar"
+            )
+            .style.width =
+            Math.max(
+                0,
+                enemyBaseHealth
+            ) / MAX_BASE_HEALTH * 100 +
+            "%";
+
+
+        if (
+            enemyBaseHealth <=
+            0
+        ) {
+
+            gameOver =
+                true;
+
+
+            alert(
+                "🏆 ¡VICTORIA!"
+            );
+
+        }
+
+    }
+
+
+    if (
+        side === "player"
+    ) {
+
+        playerBaseHealth -=
+            amount;
+
+
+        document
+            .getElementById(
+                "playerHealthBar"
+            )
+            .style.width =
+            Math.max(
+                0,
+                playerBaseHealth
+            ) /
+            MAX_BASE_HEALTH * 100
+            "%";
+
+
+        if (
+            playerBaseHealth <=
+            0
+        ) {
+
+            gameOver =
+                true;
+
+
+            alert(
+                "💀 ¡DERROTA!"
+            );
+
+        }
+
+    }
+
+}
+
+
+/* ==================================================
+   DAÑO A ENEMIGO
+================================================== */
+
+function damageEnemy(
+    enemy,
+    amount
+) {
+
+    if (
+        !enemy ||
+        enemy.health <= 0
+    ) {
+
+        return;
+
+    }
+
+
+    enemy.health -=
+        amount;
+
+
+    updateUnitHealth(
+        enemy
+    );
+
+
+    if (
+        enemy.health <=
+        0
+    ) {
+
+        enemy.element.remove();
+
+
+        enemies =
+            enemies.filter(
+                e =>
+                    e !== enemy
+            );
+
+    }
+
+}
+
+
+/* ==================================================
+   DAÑO A JUGADOR
+================================================== */
+
+function damagePlayer(
+    unit,
+    amount
+) {
+
+    if (
+        !unit ||
+        unit.health <= 0
+    ) {
+
+        return;
+
+    }
+
+
+    unit.health -=
+        amount;
+
+
+    updateUnitHealth(
+        unit
+    );
+
+
+    if (
+        unit.health <=
+        0
+    ) {
+
+        unit.element.remove();
+
+
+        playerMages =
+            playerMages.filter(
+                m =>
+                    m !== unit
+            );
+
+
+        playerWarriors =
+            playerWarriors.filter(
+                w =>
+                    w !== unit
+            );
+
+    }
+
+}
+
+
+/* ==================================================
+   ACTUALIZAR VIDA
+================================================== */
+
+function updateUnitHealth(
+    unit
+) {
+
+    const bar =
+        unit.element
+            .querySelector(
+                ".healthBar"
+            );
+
+
+    if (bar) {
+
+        bar.style.width =
+            Math.max(
+                0,
+                unit.health
+            ) /
+            unit.maxHealth *
+            100 +
+            "%";
+
+    }
+
+}
+
+
+/* ==================================================
+   MAGIA CONTRA UNIDAD
+================================================== */
+
+function castMagic(
+    mage,
+    enemy
+) {
+
+    const element =
+        document.createElement(
+            "div"
+        );
+
+
+    element.className =
+        "magic";
+
+
+    element.textContent =
+        "✨";
+
+
+    world.appendChild(
+        element
+    );
+
+
+    const spell = {
+
+        element:
+            element,
+
+        x:
+            mage.x,
+
+        enemy:
+            enemy,
+
+        targetBase:
+            false
+
+    };
+
+
+    element.style.left =
+        spell.x + "px";
+
+    element.style.bottom =
+    mage.y + "%";
+
+    magic.push(
+        spell
+    );
+
+}
+
+
+/* ==================================================
+   MAGIA CONTRA BASE
+================================================== */
+
+function castMagicBase(
+    mage
+) {
+
+    const element =
+        document.createElement(
+            "div"
+        );
+
+
+    element.className =
+        "magic";
+
+
+    element.textContent =
+        "✨";
+
+
+    world.appendChild(
+        element
+    );
+
+
+    const base =
+        getBasePosition(
+            "enemy"
+        );
+
+
+    const spell = {
+
+        element:
+            element,
+
+        x:
+            mage.x,
+
+        targetX:
+            base.left,
+
+        enemy:
+            null,
+
+        targetBase:
+            true
+
+    };
+
+
+    element.style.left =
+        spell.x + "px";
+
+    element.style.bottom =
+    mage.y + "%";
+
+    magic.push(
+        spell
+    );
+
+}
+
+
+/* ==================================================
+   ACTUALIZAR MAGIA
+================================================== */
+
+function updateMagic() {
+
+    for (
+        let i =
+            magic.length - 1;
+
+        i >= 0;
+
+        i--
+    ) {
+
+        const spell =
+            magic[i];
+
+
+        /* CONTRA ENEMIGO */
+
+        if (
+            spell.enemy
+        ) {
+
+            if (
+                spell.enemy.health <=
+                0
+            ) {
+
+                spell.element.remove();
+
+                magic.splice(
+                    i,
+                    1
+                );
+
+                continue;
+
+            }
+
+
+            spell.x +=
+                6;
+
+
+            spell.element.style.left =
+                spell.x + "px";
+
+
+            if (
+                Math.abs(
+                    spell.x -
+                    spell.enemy.x
+                ) < 30
+            ) {
+
+                damageEnemy(
+                    spell.enemy,
+                    20
+                );
+
+
+                spell.element.remove();
+
+
+                magic.splice(
+                    i,
+                    1
+                );
+
+            }
+
+        }
+
+
+        /* CONTRA BASE */
+
+        else {
+
+            spell.x +=
+                6;
+
+
+            spell.element.style.left =
+                spell.x + "px";
+
+
+            if (
+                spell.x >=
+                spell.targetX
+            ) {
+
+                damageBase(
+                    "enemy",
+                    20
+                );
+
+
+                spell.element.remove();
+
+
+                magic.splice(
+                    i,
+                    1
+                );
+
+            }
+
+        }
+
+    }
+
+}
+
+
+/* ==================================================
+   MAGO
+================================================== */
+
+function updateMages() {
+
+    for (
+        let i = 0;
+        i < playerMages.length;
+        i++
+    ) {
+
+        const mage =
+            playerMages[i];
+
+
+        if (
+            mage.health <=
+            0
+        ) {
+
+            continue;
+
+        }
+
+
+        /* ENEMIGOS */
+
+        if (
+            enemies.length >
+            0
+        ) {
+
+            let enemy =
+                enemies[0];
+
+
+            for (
+                let j = 1;
+                j < enemies.length;
+                j++
+            ) {
+
+                if (
+                    Math.abs(
+                        enemies[j].x -
+                        mage.x
+                    )
+                    <
+                    Math.abs(
+                        enemy.x -
+                        mage.x
+                    )
+                ) {
+
+                    enemy =
+                        enemies[j];
+
+                }
+
+            }
+
+
+            const distance =
+                Math.abs(
+                    enemy.x -
+                    mage.x
+                );
+
+
+            if (
+                distance >
+                180
+            ) {
+
+                mage.x +=
+                    1.2;
+
+
+                mage.element.style.left =
+                    mage.x + "px";
+
+            }
+
+            else {
+
+                const now =
+                    Date.now();
+
+
+                if (
+                    now -
+                    mage.lastAttack >=
+                    1000
+                ) {
+
+                    mage.lastAttack =
+                        now;
+
+
+                    castMagic(
+                        mage,
+                        enemy
+                    );
+
+                }
+
+            }
+
+
+            continue;
+
+        }
+
+
+        /* BASE */
+
+        const base =
+            getBasePosition(
+                "enemy"
+            );
+
+
+        const distanceToBase =
+            base.left -
+            mage.x;
+
+
+        if (
+            distanceToBase >
+            220
+        ) {
+
+            mage.x +=
+                1.2;
+
+
+            mage.element.style.left =
+                mage.x + "px";
+
+            continue;
+
+        }
+
+
+        /* POSICIÓN FIJA */
+
+        mage.x =
+            base.left -
+            200;
+
+
+        mage.element.style.left =
+            mage.x + "px";
+
+
+        const now =
+            Date.now();
+
+
+        if (
+            now -
+            mage.lastAttack >=
+            1000
+        ) {
+
+            mage.lastAttack =
+                now;
+
+
+            castMagicBase(
+                mage
+            );
+
+        }
+
+    }
+
+}
+
+
+/* ==================================================
+   GUERRERO
+================================================== */
+
+function updateWarriors() {
+
+    for (
+        let i = 0;
+        i < playerWarriors.length;
+        i++
+    ) {
+
+        const warrior =
+            playerWarriors[i];
+
+
+        if (
+            warrior.health <=
+            0
+        ) {
+
+            continue;
+
+        }
+
+
+        /* ENEMIGOS */
+
+        if (
+            enemies.length >
+            0
+        ) {
+
+            let enemy =
+                enemies[0];
+
+
+            for (
+                let j = 1;
+                j < enemies.length;
+                j++
+            ) {
+
+                if (
+                    Math.abs(
+                        enemies[j].x -
+                        warrior.x
+                    )
+                    <
+                    Math.abs(
+                        enemy.x -
+                        warrior.x
+                    )
+                ) {
+
+                    enemy =
+                        enemies[j];
+
+                }
+
+            }
+
+
+            const distance =
+                Math.abs(
+                    enemy.x -
+                    warrior.x
+                );
+
+
+            if (
+                distance >
+                55
+            ) {
+
+                warrior.x +=
+                    enemy.x >
+                    warrior.x
+                        ? 1.5
+                        : -1.5;
+
+
+                warrior.element.style.left =
+                    warrior.x + "px";
+
+            }
+
+            else {
+
+                const now =
+                    Date.now();
+
+
+                if (
+                    now -
+                    warrior.lastAttack >=
+                    700
+                ) {
+
+                    warrior.lastAttack =
+                        now;
+
+
+                    damageEnemy(
+                        enemy,
+                        30
+                    );
+
+                }
+
+            }
+
+
+            continue;
+
+        }
+
+
+        /* BASE */
+
+        const base =
+            getBasePosition(
+                "enemy"
+            );
+
+
+        const distanceToBase =
+            base.left -
+            warrior.x;
+
+
+        if (
+            distanceToBase >
+            60
+        ) {
+
+            warrior.x +=
+                1.5;
+
+
+            warrior.element.style.left =
+                warrior.x + "px";
+
+            continue;
+
+        }
+
+
+        /* POSICIÓN FIJA */
+
+        warrior.x =
+            base.left -
+            60;
+
+
+        warrior.element.style.left =
+            warrior.x + "px";
+
+
+        const now =
+            Date.now();
+
+
+        if (
+            now -
+            warrior.lastAttack >=
+            700
+        ) {
+
+            warrior.lastAttack =
+                now;
+
+
+            damageBase(
+                "enemy",
+                30
+            );
+
+        }
+
+    }
+
+}
+
+
+/* ==================================================
+   ENEMIGOS
+================================================== */
+
+function updateEnemies() {
+
+    if (gameOver) {
+        return;
+    }
+
+
+    const playerBase =
+        getBasePosition("player");
+
+
+    for (
+        let i = enemies.length - 1;
+        i >= 0;
+        i--
+    ) {
+
+        const enemy =
+            enemies[i];
+
+
+        if (
+            !enemy ||
+            enemy.health <= 0
+        ) {
+            continue;
+        }
+
+
+        /* =========================
+           BUSCAR TROPAS DEL JUGADOR
+        ========================= */
+
+        let target = null;
+
+        let closestDistance =
+            Infinity;
+
+
+        const targets = [
+            ...playerMages,
+            ...playerWarriors
+        ];
+
+
+        for (
+            let j = 0;
+            j < targets.length;
+            j++
+        ) {
+
+            const unit =
+                targets[j];
+
+
+            if (
+                !unit ||
+                unit.health <= 0
+            ) {
+                continue;
+            }
+
+
+            const distance =
+                Math.abs(
+                    unit.x -
+                    enemy.x
+                );
+
+
+            if (
+                distance <
+                closestDistance
+            ) {
+
+                target =
+                    unit;
+
+                closestDistance =
+                    distance;
+
+            }
+
+        }
+
+
+        /* =========================
+           SI HAY UNA TROPA CERCA
+        ========================= */
+
+        if (
+            target &&
+            closestDistance <= 60
+        ) {
+
+            const now =
+                Date.now();
+
+
+            if (
+                now -
+                enemy.lastAttack >=
+                800
+            ) {
+
+                enemy.lastAttack =
+                    now;
+
+
+                damagePlayer(
+                    target,
+                    20
+                );
+
+            }
+
+
+            continue;
+
+        }
+
+
+        /* =========================
+           SI HAY UNA TROPA LEJOS
+        ========================= */
+
+        if (target) {
+
+            if (
+                target.x <
+                enemy.x
+            ) {
+
+                enemy.x -= 1;
+
+            } else {
+
+                enemy.x += 1;
+
+            }
+
+
+            enemy.element.style.left =
+                enemy.x + "px";
+
+
+            continue;
+
+        }
+
+
+        /* =========================
+           NO HAY TROPAS
+           → IR A LA BASE
+        ========================= */
+
+        const baseDistance =
+            Math.abs(
+                enemy.x -
+                playerBase.right
+            );
+
+
+        /* =========================
+           LLEGÓ A LA BASE
+        ========================= */
+
+        if (
+            baseDistance <= 60
+        ) {
+
+            const now =
+                Date.now();
+
+
+            if (
+                now -
+                enemy.lastAttack >=
+                800
+            ) {
+
+                enemy.lastAttack =
+                    now;
+
+
+                damageBase(
+                    "player",
+                    40
+                );
+
+            }
+
+
+            /* IMPORTANTE:
+               ya no avanza.
+               Se queda atacando la base. */
+
+            continue;
+
+        }
+
+
+        /* =========================
+           AVANZAR HACIA LA BASE
+        ========================= */
+
+        enemy.x -= 1;
+
+
+        enemy.element.style.left =
+            enemy.x + "px";
+
+    }
+
+        }
+
+function updateBases() {
+
+    if (gameOver) {
+        return;
+    }
+
+
+    const now = Date.now();
+
+
+    /* =========================
+       TORRE DEL JUGADOR
+    ========================= */
+
+    const playerBase =
+        getBasePosition("player");
+
+
+    let playerTarget = null;
+
+    let playerClosestDistance =
+        Infinity;
+
+
+    const enemiesNearBase =
+        [...enemies];
+
+
+    for (
+        let i = 0;
+        i < enemiesNearBase.length;
+        i++
+    ) {
+
+        const enemy =
+            enemiesNearBase[i];
+
+
+        if (
+            !enemy ||
+            enemy.health <= 0
+        ) {
+            continue;
+        }
+
+
+        const distance =
+            Math.abs(
+                enemy.x -
+                playerBase.right
+            );
+
+
+        /* La torre solo ataca
+           dentro de su rango */
+
+        if (
+            distance <= 220 &&
+            distance < playerClosestDistance
+        ) {
+
+            playerTarget =
+                enemy;
+
+            playerClosestDistance =
+                distance;
+
+        }
+
+    }
+
+
+    /* =========================
+       ATAQUE TORRE JUGADOR
+    ========================= */
+
+    if (
+        playerTarget &&
+        now -
+        (window.playerBaseLastAttack || 0)
+        >= 1000
+    ) {
+
+        window.playerBaseLastAttack =
+            now;
+
+
+        damageEnemy(
+            playerTarget,
+            80
+        );
+
+    }
+
+
+    /* =========================
+       TORRE ENEMIGA
+    ========================= */
+
+    const enemyBase =
+        getBasePosition("enemy");
+
+
+    let enemyTarget = null;
+
+    let enemyClosestDistance =
+        Infinity;
+
+
+    const playerUnits = [
+        ...playerMages,
+        ...playerWarriors
+    ];
+
+
+    for (
+        let i = 0;
+        i < playerUnits.length;
+        i++
+    ) {
+
+        const unit =
+            playerUnits[i];
+
+
+        if (
+            !unit ||
+            unit.health <= 0
+        ) {
+            continue;
+        }
+
+
+        const distance =
+            Math.abs(
+                unit.x -
+                enemyBase.left
+            );
+
+
+        /* La torre enemiga
+           solo ataca dentro
+           de su rango */
+
+        if (
+            distance <= 220 &&
+            distance < enemyClosestDistance
+        ) {
+
+            enemyTarget =
+                unit;
+
+            enemyClosestDistance =
+                distance;
+
+        }
+
+    }
+
+
+    /* =========================
+       ATAQUE TORRE ENEMIGA
+    ========================= */
+
+    if (
+        enemyTarget &&
+        now -
+        (window.enemyBaseLastAttack || 0)
+        >= 1000
+    ) {
+
+        window.enemyBaseLastAttack =
+            now;
+
+
+        damagePlayer(
+            enemyTarget,
+            80
+        );
+
+    }
+
+}
+
+/* ==================================================
+   GAME LOOP
+================================================== */
+
+function gameLoop() {
+
+    if (
+        !gameOver
+    ) {
+
+        updateMages();
+
+        updateWarriors();
+
+        updateEnemies();
+
+        updateMagic();
+
+        updateBases();
+
+    }
+
+
+    requestAnimationFrame(
+        gameLoop
+    );
+
+}
+
+
+/* ==================================================
+   DINERO
+================================================== */
+
+setInterval(
+    function() {
+
+        if (
+            !gameOver
+        ) {
+
+            money +=
+                5;
+
+            updateMoney();
+
+        }
+
+    },
+    2000
+);
+
+
+/* ==================================================
+   ENEMIGOS
+================================================== */
+
+setInterval(
+    function() {
+
+        createEnemy();
+
+    },
+    4000
+);
+
+
+/* ==================================================
+   TIEMPO
+================================================== */
+
+setInterval(
+    function() {
+
+        if (
+            gameOver
+        ) {
+
+            return;
+
+        }
+
+
+        time--;
+
+
+        document
+            .getElementById(
+                "timer"
+            )
+            .textContent =
+            "⏱️ " + time;
+
+
+        if (
+            time <=
+            0
+        ) {
+
+            time =
+                120;
+
+        }
+
+    },
+    1000
+);
+
+
+/* ==================================================
+   INICIAR
+================================================== */
+
+updateMoney();
+
+updateCamera();
+
+gameLoop();
+
+</script>
+
+</body>
+
+</html>
